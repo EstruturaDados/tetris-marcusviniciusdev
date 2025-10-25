@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Desafio Tetris Stack - Nível Aventureiro
-// Tema 3 - Fila Circular de Peças + Pilha de Reserva
+// Desafio Tetris Stack - Nível Mestre
+// Tema 3 - Integração Total entre Fila Circular e Pilha de Reserva
 
 #define MAX_FILA 5
 #define MAX_PILHA 3
@@ -166,6 +166,62 @@ void mostrarPilha(PilhaReserva *pilha) {
     printf("└────────────────────────────────────┘\n");
 }
 
+// Trocar a peça da frente da fila com o topo da pilha
+void trocarFrenteTopo(FilaCircular *fila, PilhaReserva *pilha) {
+    if (filaVazia(fila)) {
+        printf("\n❌ Não é possível trocar: a fila está vazia!\n");
+        return;
+    }
+    if (pilhaVazia(pilha)) {
+        printf("\n❌ Não é possível trocar: a pilha está vazia!\n");
+        return;
+    }
+
+    // Trocar os elementos
+    Peca temp = fila->pecas[fila->frente];
+    fila->pecas[fila->frente] = pilha->pecas[pilha->topo];
+    pilha->pecas[pilha->topo] = temp;
+
+    printf("\n🔄 Troca realizada com sucesso!\n");
+    printf("   Frente da fila ↔️ Topo da pilha\n");
+}
+
+// Trocar os 3 primeiros da fila com as 3 peças da pilha
+void trocarTresPrimeiros(FilaCircular *fila, PilhaReserva *pilha) {
+    if (fila->tamanho < 3) {
+        printf("\n❌ Não é possível trocar: a fila tem menos de 3 peças! (Atual: %d)\n", fila->tamanho);
+        return;
+    }
+    if ((pilha->topo + 1) != MAX_PILHA) {
+        printf("\n❌ Não é possível trocar: a pilha deve ter exatamente 3 peças! (Atual: %d)\n", pilha->topo + 1);
+        return;
+    }
+
+    printf("\n🔄 Trocando os 3 primeiros da fila com as 3 peças da pilha...\n");
+
+    // Criar array temporário para as peças da fila
+    Peca tempFila[3];
+
+    // Copiar os 3 primeiros da fila
+    for (int i = 0; i < 3; i++) {
+        int indice = (fila->frente + i) % MAX_FILA;
+        tempFila[i] = fila->pecas[indice];
+    }
+
+    // Mover peças da pilha para a fila
+    for (int i = 0; i < 3; i++) {
+        int indice = (fila->frente + i) % MAX_FILA;
+        fila->pecas[indice] = pilha->pecas[2 - i]; // Inverte a ordem (pilha é LIFO)
+    }
+
+    // Mover peças da fila temporária para a pilha
+    for (int i = 0; i < 3; i++) {
+        pilha->pecas[i] = tempFila[2 - i]; // Inverte a ordem
+    }
+
+    printf("✅ Troca dos 3 primeiros realizada com sucesso!\n");
+}
+
 int main() {
     FilaCircular fila;
     PilhaReserva pilha;
@@ -179,7 +235,7 @@ int main() {
     inicializarPilha(&pilha);
 
     // Preencher a fila com 5 peças iniciais
-    printf("🎮 Bem-vindo ao Tetris Stack - Nível Aventureiro!\n");
+    printf("🎮 Bem-vindo ao Tetris Stack - Nível Mestre!\n");
     printf("Inicializando fila com 5 peças...\n");
 
     for (int i = 0; i < MAX_FILA; i++) {
@@ -192,14 +248,16 @@ int main() {
 
     // Loop principal do jogo
     do {
-        printf("\n╔═══════════════════════════════════════════╗\n");
-        printf("║           MENU PRINCIPAL                  ║\n");
-        printf("╠═══════════════════════════════════════════╣\n");
-        printf("║ 1 - Jogar peça (remover da frente)        ║\n");
-        printf("║ 2 - Reservar peça (enviar para pilha)     ║\n");
-        printf("║ 3 - Usar peça reservada (remover da pilha)║\n");
-        printf("║ 0 - Sair                                  ║\n");
-        printf("╚═══════════════════════════════════════════╝\n");
+        printf("\n╔═══════════════════════════════════════════════╗\n");
+        printf("║            MENU PRINCIPAL - NÍVEL MESTRE      ║\n");
+        printf("╠═══════════════════════════════════════════════╣\n");
+        printf("║ 1 - Jogar peça (remover da frente)            ║\n");
+        printf("║ 2 - Reservar peça (enviar para pilha)         ║\n");
+        printf("║ 3 - Usar peça reservada (remover da pilha)    ║\n");
+        printf("║ 4 - Trocar frente da fila com topo da pilha   ║\n");
+        printf("║ 5 - Trocar 3 primeiros da fila com pilha      ║\n");
+        printf("║ 0 - Sair                                      ║\n");
+        printf("╚═══════════════════════════════════════════════╝\n");
         printf("Escolha uma opção: ");
         scanf("%d", &opcao);
 
@@ -250,6 +308,22 @@ int main() {
                     mostrarPilha(&pilha);
                 } else {
                     printf("\n❌ Não há peças na pilha de reserva!\n");
+                }
+                break;
+            }
+            case 4: {
+                trocarFrenteTopo(&fila, &pilha);
+                if (!filaVazia(&fila) && !pilhaVazia(&pilha)) {
+                    mostrarFila(&fila);
+                    mostrarPilha(&pilha);
+                }
+                break;
+            }
+            case 5: {
+                trocarTresPrimeiros(&fila, &pilha);
+                if (fila.tamanho >= 3 && (pilha.topo + 1) == MAX_PILHA) {
+                    mostrarFila(&fila);
+                    mostrarPilha(&pilha);
                 }
                 break;
             }
